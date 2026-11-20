@@ -12,7 +12,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton,
                              QSlider, QVBoxLayout, QWidget)
 
-from interface.main_interface import LUMINOSITE_MIN, InterfacePrincipale
+from models.main_interface import LUMINOSITE_MIN, InterfacePrincipale
 
 
 def creer_page_fictive(interface) -> QWidget:
