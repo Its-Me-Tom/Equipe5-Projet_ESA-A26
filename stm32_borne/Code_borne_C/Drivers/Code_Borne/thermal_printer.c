@@ -84,9 +84,7 @@ static HAL_StatusTypeDef tp_code128(const char *data)
     buf[i++] = 0x1D;
     buf[i++] = 'k';
     buf[i++] = 73;
-    buf[i++] = (uint8_t)(len + 2);
-    buf[i++] = '{';
-    buf[i++] = 'B';
+    buf[i++] = (uint8_t)len;
     memcpy(&buf[i], data, len);
     i += len;
 
