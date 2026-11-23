@@ -107,26 +107,54 @@ int main(void)
   MX_USB_HOST_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+  uint32_t button_timer = 0;
 
+  GPIO_PinState button_state = GPIO_PIN_RESET;
+  GPIO_PinState button_last_read = GPIO_PIN_RESET;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
+	  // Update stepper motors
+	      Stepper_Update();
+
+
+	      // Read PA0
+	      GPIO_PinState button_read =
+	          HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+
+
+	      // Detect a change in button state
+	      if(button_read != button_last_read)
 	      {
-	          // Move Moteur_ASC by 200 steps
-	          Stepper_Move(Moteur_ASC, 250, GPIO_PIN_SET, 2);
+	          button_timer = HAL_GetTick();
+	          button_last_read = button_read;
+	      }
 
-	          // Wait for button release
-	          while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
+
+	      // Debounce (50 ms)
+	      if((HAL_GetTick() - button_timer) >= 50)
+	      {
+	          if(button_read != button_state)
 	          {
-	              HAL_Delay(10);
-	          }
+	              button_state = button_read;
 
-	          // Small debounce delay
-	          HAL_Delay(50);
+	              // Button pressed
+	              if(button_state == GPIO_PIN_SET)
+	              {
+	                  if(!Stepper_IsBusy(Moteur_ASC))
+	                  {
+	                      Stepper_StartMove(
+	                          Moteur_ASC,
+	                          200,
+	                          GPIO_PIN_SET,
+	                          4
+	                      );
+	                  }
+	              }
+	          }
 	      }
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
