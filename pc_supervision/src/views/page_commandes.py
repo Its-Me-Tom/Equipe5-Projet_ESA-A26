@@ -83,9 +83,19 @@ class PageCommandes(QWidget):
         self.bouton_hors_service.clicked.connect(lambda: self.commande_cliquee.emit("METTRE_HORS_SERVICE"))
         self.bouton_en_service.clicked.connect(lambda: self.commande_cliquee.emit("REMETTRE_EN_SERVICE"))
         self.bouton_arret.clicked.connect(lambda: self.commande_cliquee.emit("ARRET_IMMEDIAT"))
-        self.bouton_reinitialiser.clicked.connect(lambda: self.commande_cliquee.emit("REINITIALISER"))
+        self.bouton_reinitialiser.clicked.connect(self._reinitialiser_clique)
 
         self.afficher_etat("INCONNU", "", "")
+
+    def _reinitialiser_clique(self):
+        """Clic sur « Réinitialiser »."""
+        # emit() appelle le contrôleur tout de suite : il lit la case et
+        # envoie la commande AVANT que la ligne suivante s'exécute.
+        self.commande_cliquee.emit("REINITIALISER")
+
+        # Toujours décocher après le clic, que la commande ait marché ou non :
+        # l'intervention doit être reconfirmée avant chaque essai.
+        self.case_intervention.setChecked(False)
 
     def intervention_confirmee(self) -> bool:
         return self.case_intervention.isChecked()
