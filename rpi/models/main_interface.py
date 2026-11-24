@@ -8,6 +8,7 @@ comportement sur PC et sur Raspberry Pi (aucune dépendance au matériel).
 """
 import logging
 import math
+import time
 
 from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
 from PyQt6.QtGui import QColor, QPainter
@@ -22,8 +23,9 @@ except ImportError:      # pyserial absent (ex. PC de dev) : l'interface fonctio
 
 log = logging.getLogger("t01")
 
-DELAI_VEILLE_S = 30  # configurable
+DELAI_VEILLE_S = 20  # configurable
 INTERVALLE_RADAR_MS = 200  # fréquence de lecture du radar
+
 
 # --- Luminosité ---
 LUMINOSITE_MIN = 10   # %, évite un écran complètement noir
@@ -42,8 +44,12 @@ class _FiltreTactile(QObject):
 
     def eventFilter(self, obj, event):
         if event.type() in (QEvent.Type.MouseButtonPress,
-                            QEvent.Type.TouchBegin):
-            self._interface.signaler_activite()
+                            QEvent.Type.MouseButtonRelease,
+                            QEvent.Type.MouseMove,
+                            QEvent.Type.TouchBegin,
+                            QEvent.Type.TouchUpdate,
+                            QEvent.Type.TouchEnd):
+            self._interface.signaler_toucher()
         return False
 
 
@@ -76,6 +82,7 @@ class InterfacePrincipale(QMainWindow):
         self._delai_ms = int(delai_veille_s * 1000)
         self._transaction_active = False
         self._en_veille = False
+        self._dernier_toucher = time.monotonic()
         self._page_courante = "accueil"
         self._pages: dict[str, QWidget] = {}
 
@@ -150,6 +157,11 @@ class InterfacePrincipale(QMainWindow):
         self._pile.setCurrentWidget(self._pages[self._page_courante])
         self._minuterie.start(self._delai_ms)
 
+    def signaler_toucher(self) -> None:
+        """Toucher de l'utilisateur : mémorise l'heure et relance le délai."""
+        self._dernier_toucher = time.monotonic()
+        self.signaler_activite()
+
     # ------------------------------------------------------------------
     # Ajouts utiles à l'intégration
     # ------------------------------------------------------------------
@@ -170,7 +182,9 @@ class InterfacePrincipale(QMainWindow):
         if etat is True:
             self.signaler_presence(True)             # réveille + relance le délai
         elif etat is False and self._radar_etat is not False:
-            self._delai_ecoule()                     # personne : veille immédiate
+            # personne : veille immédiate, sauf si l'écran a été touché récemment
+            if time.monotonic() - self._dernier_toucher >= self._delai_ms / 1000:
+                self._delai_ecoule()
         self._radar_etat = etat
 
     def definir_delai_veille(self, secondes: float) -> None:
