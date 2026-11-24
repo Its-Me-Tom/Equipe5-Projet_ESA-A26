@@ -313,7 +313,7 @@ def afficher_affichage(fenetre, parties=("bandes", "etat", "places", "anomalies"
         tableau(["heure", "tâche", "code", "message", "place", "critique"], a["anomalies"])
     if "comptes" in parties:
         info("Onglet Comptes RFID :")
-        tableau(["carte", "solde"], a["comptes"])
+        tableau(["carte", "nom", "solde"], a["comptes"])
         info(a["reponse_comptes"])
     if "statistiques" in parties:
         info("Onglet Statistiques :")
@@ -345,10 +345,11 @@ if not MATERIEL_REEL:
     verifier("Commande envoyée automatiquement", commande["commande"], "CONSULTER_SOLDE")
     verifier("Sur le topic comptes/commande", topic, MqttTopics.COMMANDE_COMPTES)
     reponse(commande, MqttTopics.REPONSE_COMPTES,
-            comptes=[{"rfid": "0A1B2C3D4E", "solde": 2500}, {"rfid": "1F00AA5501", "solde": 1000}])
+            comptes=[{"rfid": "0008580808", "nom": "Thomas", "solde": 2500},
+                     {"rfid": "0008909278", "solde": 1000}])        # 2e compte sans nom (ancien RPi)
     afficher_affichage(fenetre, ("comptes",))
-    verifier("Tableau des comptes", lire_affichage(fenetre)["comptes"], [["0A1B2C3D4E", "25,00 $"],
-                                                                         ["1F00AA5501", "10,00 $"]])
+    verifier("Tableau des comptes (carte, nom, solde)", lire_affichage(fenetre)["comptes"],
+             [["0008580808", "Thomas", "25,00 $"], ["0008909278", "", "10,00 $"]])
     verifier("Plus en attente de réponse", modele.en_attente, {})
 
     etape("2. Boutons de l'onglet Commandes")
@@ -400,11 +401,11 @@ if not MATERIEL_REEL:
     topic, credit = mqtt.publies[-1]
     verifier("Crédit : topic, commande, carte, montant en cents",
              (topic, credit["commande"], credit["rfid"], credit["montant"]),
-             (MqttTopics.COMMANDE_COMPTES, "AJOUTER_CREDIT", "0A1B2C3D4E", 1000))
+             (MqttTopics.COMMANDE_COMPTES, "AJOUTER_CREDIT", "0008580808", 1000))
     comptes.bouton_renvoyer.click()
     verifier("Renvoi : MÊME id_commande", mqtt.publies[-1][1]["id_commande"], credit["id_commande"])
-    reponse(credit, MqttTopics.REPONSE_COMPTES, rfid="0A1B2C3D4E", solde=3500, message="Crédit ajouté")
-    verifier("Solde mis à jour dans le tableau", lire_affichage(fenetre)["comptes"][0], ["0A1B2C3D4E", "35,00 $"])
+    reponse(credit, MqttTopics.REPONSE_COMPTES, rfid="0008580808", nom="Thomas", solde=3500, message="Crédit ajouté")
+    verifier("Solde mis à jour dans le tableau", lire_affichage(fenetre)["comptes"][0], ["0008580808", "Thomas", "35,00 $"])
 
     etape(f"5. Commande sans réponse : signalée après {config.DELAI_REPONSE_S} s")
     page.bouton_en_service.click()

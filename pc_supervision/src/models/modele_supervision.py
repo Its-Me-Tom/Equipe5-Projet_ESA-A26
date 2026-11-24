@@ -30,6 +30,7 @@ class ModeleSupervision:
         self.statistiques = []     # un dictionnaire par compte
         self.tarif = None          # tarif en cents par minute
         self.comptes = {}          # carte -> solde (réponses sur les comptes)
+        self.noms = {}             # carte -> nom du compte (s'il est fourni par le RPi)
         self.rpi_en_ligne = None   # None = inconnu, True / False = annoncé par le RPi
 
         # Suivi des commandes
@@ -140,5 +141,11 @@ class ModeleSupervision:
         for compte in reponse.get("comptes", []):
             self.comptes[compte["rfid"]] = compte["solde"]
 
+            if compte.get("nom"):
+                self.noms[compte["rfid"]] = compte["nom"]
+
         if "rfid" in reponse and reponse.get("solde") is not None:
             self.comptes[reponse["rfid"]] = reponse["solde"]
+
+            if reponse.get("nom"):
+                self.noms[reponse["rfid"]] = reponse["nom"]

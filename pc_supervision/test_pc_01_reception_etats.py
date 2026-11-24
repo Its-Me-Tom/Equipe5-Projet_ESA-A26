@@ -34,6 +34,7 @@ import src.network.mqtt_client as module_mqtt
 from src import config
 from src.mqtt_topics import MqttTopics
 from src.views.main_window import MainWindow
+from src.views.page_stationnement import ARRONDI_TEMOIN, TAILLE_TEMOIN
 
 
 # ----------------------------------------------------------------------
@@ -41,6 +42,10 @@ from src.views.main_window import MainWindow
 # ----------------------------------------------------------------------
 MATERIEL_REEL = False      # True = vrai broker + vrai Raspberry Pi
 MONTRER_FENETRE = False    # True = ouvre aussi la fenêtre pendant le test
+
+# lancer_tous_les_tests.py force la simulation (ESA_SIMULATION=1) sans modifier les réglages
+if os.environ.get("ESA_SIMULATION") == "1":
+    MATERIEL_REEL = False
 
 
 # ======================================================================
@@ -314,7 +319,7 @@ def afficher_affichage(fenetre, parties=("bandes", "etat", "places", "anomalies"
         tableau(["heure", "tâche", "code", "message", "place", "critique"], a["anomalies"])
     if "comptes" in parties:
         info("Onglet Comptes RFID :")
-        tableau(["carte", "solde"], a["comptes"])
+        tableau(["carte", "nom", "solde"], a["comptes"])
         info(a["reponse_comptes"])
     if "statistiques" in parties:
         info("Onglet Statistiques :")
@@ -339,6 +344,9 @@ if not MATERIEL_REEL:
     verifier("État INCONNU", modele.etat_service, "INCONNU")
     verifier("Places grises (couleur inconnue)", set(lire_affichage(fenetre)["couleurs_places"].values()),
              {config.COULEUR_INCONNUE.lower()})
+    verifier("Témoins des places : carrés aux coins arrondis (pas des cercles)",
+             0 < ARRONDI_TEMOIN < TAILLE_TEMOIN // 2 and all(f"border-radius: {ARRONDI_TEMOIN}px" in temoin.styleSheet()
+             for temoin, _ in fenetre.page_stationnement._temoins.values()), True)
 
     etape("1. État général")
     mqtt.injecter(MqttTopics.ETAT, {"etat_service": "MISE_HORS_SERVICE", "etat_retrait": "MOUVEMENT",
