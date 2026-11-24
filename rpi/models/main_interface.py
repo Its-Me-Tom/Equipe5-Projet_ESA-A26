@@ -15,9 +15,15 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
 
 from .page_accueil import PageAccueil
 
+try:
+    from . import c4001_presence as radar
+except ImportError:      # pyserial absent (ex. PC de dev) : l'interface fonctionne sans radar
+    radar = None
+
 log = logging.getLogger("t01")
 
 DELAI_VEILLE_S = 30  # configurable
+INTERVALLE_RADAR_MS = 200  # fréquence de lecture du radar
 
 # --- Luminosité ---
 LUMINOSITE_MIN = 10   # %, évite un écran complètement noir
@@ -98,6 +104,13 @@ class InterfacePrincipale(QMainWindow):
         QApplication.instance().installEventFilter(_FiltreTactile(self))
         self._minuterie.start(self._delai_ms)
 
+        # Radar de présence : lu régulièrement, réveille l'écran si quelqu'un est là.
+        self._radar_dispo = "init"
+        self._radar_etat = None      # dernier état connu du radar
+        self._minuterie_radar = QTimer(self)
+        self._minuterie_radar.timeout.connect(self._lire_radar)
+        self._minuterie_radar.start(INTERVALLE_RADAR_MS)
+
     # ------------------------------------------------------------------
     # API publique (section 4.2)
     # ------------------------------------------------------------------
@@ -144,6 +157,21 @@ class InterfacePrincipale(QMainWindow):
         """À appeler avec le résultat de RadarPresence.lire_presence()."""
         if presente:
             self.signaler_activite()
+
+    def _lire_radar(self) -> None:
+        if radar is None:
+            return
+        etat = radar.presence()          # True / False / None (capteur muet)
+        dispo = etat is not None
+        if dispo != self._radar_dispo:   # met à jour le voyant seulement s'il change
+            self._radar_dispo = dispo
+            self.page_accueil.definir_radar_disponible(dispo)
+
+        if etat is True:
+            self.signaler_presence(True)             # réveille + relance le délai
+        elif etat is False and self._radar_etat is not False:
+            self._delai_ecoule()                     # personne : veille immédiate
+        self._radar_etat = etat
 
     def definir_delai_veille(self, secondes: float) -> None:
         self._delai_ms = int(secondes * 1000)
@@ -224,3 +252,9 @@ class InterfacePrincipale(QMainWindow):
         self._en_veille = True
         self._pile.setCurrentWidget(self._page_veille)
         self.setCursor(Qt.CursorShape.BlankCursor)
+
+    def closeEvent(self, event):
+        self._minuterie_radar.stop()
+        if radar is not None:
+            radar.fermer()
+        super().closeEvent(event)

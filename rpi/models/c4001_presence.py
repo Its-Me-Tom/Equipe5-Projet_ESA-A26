@@ -21,7 +21,7 @@ import serial
 
 # ======================= REGLAGES =======================
 PORT = "/dev/ttyAMA0"
-BAUD = None                       # None = detection auto (9600 puis 115200)
+BAUD = 9600                       # None = detection auto (9600 puis 115200)
 
 PORTEE_MAX = 2.0                  # m, 0.6 a 25
 DISTANCE_DECLENCHEMENT = 1.4      # m, doit etre <= PORTEE_MAX - 0.6
