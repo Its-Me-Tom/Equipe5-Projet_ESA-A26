@@ -11,7 +11,8 @@ from src import config
 
 TEXTE_PRESENCE = {True: "véhicule présent", False: "aucun véhicule", None: "IR inconnu"}
 
-TAILLE_TEMOIN = 56     # diamètre d'un témoin, en pixels
+TAILLE_TEMOIN = 56     # côté d'un témoin carré, en pixels
+ARRONDI_TEMOIN = 8     # coins arrondis, en pixels (0 = coins droits, 28 = cercle)
 
 
 class PageStationnement(QWidget):
@@ -52,7 +53,7 @@ class PageStationnement(QWidget):
         self._minuterie.start(config.PERIODE_CLIGNOTEMENT_MS)
 
     def _construire_place(self, nom: str) -> QWidget:
-        """Un témoin rond avec le nom de la place et son état en texte."""
+        """Un témoin carré avec le nom de la place et son état en texte."""
         widget = QWidget()
         disposition = QVBoxLayout(widget)
 
@@ -88,7 +89,7 @@ class PageStationnement(QWidget):
         temoin, texte = self._temoins[nom]
         temoin.setStyleSheet(
             f"background-color: {couleur}; color: black; font-weight: bold;"
-            f"border-radius: {TAILLE_TEMOIN // 2}px; border: 1px solid #424242;"
+            f"border-radius: {ARRONDI_TEMOIN}px; border: 1px solid #424242;"
         )
 
     def afficher_places(self, places: list, rampe):

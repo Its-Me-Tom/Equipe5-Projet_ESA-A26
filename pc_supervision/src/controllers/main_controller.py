@@ -159,6 +159,6 @@ class MainController:
 
         if topic == MqttTopics.REPONSE_COMPTES:
             self.view.page_comptes.afficher_reponse(texte)
-            self.view.page_comptes.afficher_comptes(self.modele.comptes)
+            self.view.page_comptes.afficher_comptes(self.modele.comptes, self.modele.noms)
         else:
             self.view.page_commandes.afficher_reponse(texte)

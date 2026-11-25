@@ -1,5 +1,7 @@
 """Fenêtre principale de l'application de supervision (PC) — T13."""
 
+from datetime import datetime
+
 from PyQt6.QtWidgets import QLabel, QMainWindow, QPlainTextEdit, QTabWidget, QVBoxLayout, QWidget
 
 from src import config
@@ -83,5 +85,9 @@ class MainWindow(QMainWindow):
         )
 
     def add_log(self, texte: str):
-        """Ajoute une ligne au journal (même nom que dans le labo 4)."""
-        self.texte_journal.appendPlainText(texte)
+        """Ajoute une ligne au journal, avec l'heure à gauche (même nom que dans le labo 4).
+
+        Ex. : « 14:32:07  Connecté au broker. »
+        """
+        heure = datetime.now().strftime("%H:%M:%S")
+        self.texte_journal.appendPlainText(f"{heure}  {texte}")

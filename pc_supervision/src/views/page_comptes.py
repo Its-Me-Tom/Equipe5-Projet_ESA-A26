@@ -36,8 +36,8 @@ class PageComptes(QWidget):
         disposition.addWidget(self.bouton_actualiser)
 
         self.tableau = QTableWidget()
-        self.tableau.setColumnCount(2)
-        self.tableau.setHorizontalHeaderLabels(["Carte RFID", "Solde"])
+        self.tableau.setColumnCount(3)
+        self.tableau.setHorizontalHeaderLabels(["Carte RFID", "Nom", "Solde"])
         self.tableau.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.tableau.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.tableau.verticalHeader().setVisible(False)
@@ -83,14 +83,16 @@ class PageComptes(QWidget):
         cents = round(self.saisie_montant.value() * 100)
         self.crediter_clique.emit(carte, cents)
 
-    def afficher_comptes(self, comptes: dict):
-        """Affiche les soldes reçus (carte -> solde en cents)."""
+    def afficher_comptes(self, comptes: dict, noms: dict | None = None):
+        """Affiche les soldes reçus (carte -> solde en cents) et les noms (carte -> nom)."""
+        noms = noms or {}
         selection = self.tableau.currentRow()
         self.tableau.setRowCount(len(comptes))
 
         for ligne, (carte, solde) in enumerate(comptes.items()):
-            self.tableau.setItem(ligne, 0, QTableWidgetItem(carte))
-            self.tableau.setItem(ligne, 1, QTableWidgetItem(formater_argent(solde)))
+            self.tableau.setItem(ligne, 0, QTableWidgetItem(carte))      # colonne 0 : lue par _crediter()
+            self.tableau.setItem(ligne, 1, QTableWidgetItem(noms.get(carte, "")))
+            self.tableau.setItem(ligne, 2, QTableWidgetItem(formater_argent(solde)))
 
         if 0 <= selection < len(comptes):
             self.tableau.selectRow(selection)
