@@ -20,6 +20,8 @@
 #include "main.h"
 #include "usb_host.h"
 #include "Moteur_Step.h"
+#include "Module_ROT.h"
+#include "Types_Communs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -111,6 +113,8 @@ int main(void)
 
   GPIO_PinState button_state = GPIO_PIN_RESET;
   GPIO_PinState button_last_read = GPIO_PIN_RESET;
+  uint8_t PositionActuelle = 0;
+  int test_bouton = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,15 +148,17 @@ int main(void)
 	              // Button pressed
 	              if(button_state == GPIO_PIN_SET)
 	              {
-	                  if(!Stepper_IsBusy(Moteur_ASC))
-	                  {
-	                      Stepper_StartMove(
-	                          Moteur_ASC,
-	                          200,
-	                          GPIO_PIN_SET,
-	                          4
-	                      );
-	                  }
+	            	  if (!Stepper_IsBusy(Moteur_ROT))
+	            	  {
+	            	      if (PositionActuelle == 0)
+	            	      {
+	            	          Rotation_DeplacerVers(2, &PositionActuelle);
+	            	      }
+	            	      else
+	            	      {
+	            	          Rotation_DeplacerVers(0, &PositionActuelle);
+	            	      }
+	            	  }
 	              }
 	          }
 	      }
