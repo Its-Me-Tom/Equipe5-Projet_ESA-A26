@@ -6,6 +6,7 @@ Aucune logique métier : affichage des 14 emplacements, de leur état, et
 """
 import sys
 
+from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
                              QPushButton, QSizePolicy, QVBoxLayout, QWidget)
@@ -34,7 +35,7 @@ def _style_emplacements() -> str:
         QPushButton[etat="{etat}"] {{
             background: {fond}; color: {texte};
             border: 4px solid {bord}; border-radius: 18px;
-            font-size: 24px; font-weight: bold; }}
+            font-weight: bold; }}
         QPushButton[etat="{etat}"]:disabled {{
             background: {fond}; color: {texte}; border-color: {bord}; }}""")
     regles.append('QPushButton[etat="libre"]:pressed { background: #1f6b45; }')
@@ -54,12 +55,46 @@ QLabel     { color: #e8eef7; }
 """ + _style_emplacements()
 
 
-class _BoutonEmplacement(QPushButton):
-    def __init__(self, numero: int):
+class BoutonTexteAjuste(QPushButton):
+    """Bouton dont la taille ne dépend pas du texte : c'est le texte qui
+    s'adapte (police réduite au besoin) à la taille du bouton."""
+
+    def __init__(self, taille_max: int = 28):
         super().__init__()
+        self._taille_max = taille_max
+        self.setSizePolicy(QSizePolicy.Policy.Ignored,
+                           QSizePolicy.Policy.Ignored)
+
+    def setText(self, texte: str) -> None:
+        super().setText(texte)
+        self._ajuster_texte()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._ajuster_texte()
+
+    def _ajuster_texte(self, marge: int = 24) -> None:
+        lignes = self.text().split("\n")
+        largeur = self.width() - marge
+        hauteur = self.height() - marge
+        police = self.font()
+        police.setBold(True)
+        taille = self._taille_max
+        while taille > 8:
+            police.setPixelSize(taille)
+            fm = QFontMetrics(police)
+            if (max(fm.horizontalAdvance(ligne) for ligne in lignes) <= largeur
+                    and fm.lineSpacing() * len(lignes) <= hauteur):
+                break
+            taille -= 1
+        police.setPixelSize(taille)
+        self.setFont(police)
+
+
+class _BoutonEmplacement(BoutonTexteAjuste):
+    def __init__(self, numero: int):
+        super().__init__(taille_max=28)
         self.numero = numero
-        self.setSizePolicy(QSizePolicy.Policy.Expanding,
-                           QSizePolicy.Policy.Expanding)
         self.setMinimumHeight(130)
         self.definir_etat(LIBRE)
 
@@ -90,6 +125,10 @@ class PageParking(QWidget):
         self._boutons: dict[int, _BoutonEmplacement] = {}
         grille = QGridLayout()
         grille.setSpacing(12)
+        for c in range(COLONNES):
+            grille.setColumnStretch(c, 1)
+        for r in range(2):
+            grille.setRowStretch(r, 1)
         for i in range(NB_EMPLACEMENTS):
             numero = i + 1
             bouton = _BoutonEmplacement(numero)

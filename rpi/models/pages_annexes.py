@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QGridLayout, QHBoxLayout, QLabel, QPushButton,
 
 from .main_interface import LUMINOSITE_MIN
 from .page_parking import (COULEURS, LIBELLES, LIBRE, MAINTENANCE, OCCUPE,
-                           RESERVE)
+                           RESERVE, BoutonTexteAjuste)
 
 STYLE_RETOUR = """
     QPushButton { background: #2f80ed; color: white; font-size: 26px;
@@ -66,7 +66,7 @@ def _style_bouton_etat(etat: str) -> str:
     fond, bord, texte = COULEURS[etat]
     return (f"QPushButton {{ background: {fond}; color: {texte};"
             f" border: 3px solid {bord}; border-radius: 12px;"
-            f" font-size: 18px; font-weight: bold; }}"
+            f" font-weight: bold; }}"
             f"QPushButton:pressed {{ background: {bord}; }}")
 
 
@@ -110,6 +110,10 @@ def creer_page_test(interface, page_parking) -> QWidget:
     boutons: dict[int, QPushButton] = {}
     grille = QGridLayout()
     grille.setSpacing(8)
+    for c in range(7):
+        grille.setColumnStretch(c, 1)
+    for r in range(2):
+        grille.setRowStretch(r, 1)
 
     def rafraichir():
         for n, b in boutons.items():
@@ -130,11 +134,11 @@ def creer_page_test(interface, page_parking) -> QWidget:
 
     for i in range(14):
         n = i + 1
-        b = QPushButton()
+        b = BoutonTexteAjuste(taille_max=20)
         b.setMinimumHeight(80)
         b.clicked.connect(lambda _=False, n=n: etat_suivant(n))
         boutons[n] = b
-        grille.addWidget(b, i // 7, i % 7)
+        grille.addWidget(b, i // 7, i % 7)      # sans cette ligne, les boutons s'empilent
 
     bouton_libre = QPushButton("Tout remettre libre")
     bouton_libre.setStyleSheet("""
@@ -147,10 +151,9 @@ def creer_page_test(interface, page_parking) -> QWidget:
     centre.addWidget(titre)
     centre.addWidget(aide)
     centre.addSpacing(10)
-    centre.addLayout(grille)
+    centre.addLayout(grille, 1)
     centre.addSpacing(10)
     centre.addWidget(bouton_libre)
-    centre.addStretch(1)
     racine.addLayout(centre, 1)
 
     page.a_l_affichage = rafraichir
