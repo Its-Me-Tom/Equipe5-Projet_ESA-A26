@@ -136,6 +136,7 @@ class MainController:
 
         elif changement == "places":
             view.page_stationnement.afficher_places(modele.places, modele.rampe)
+            self._rafraichir_clients_et_historique()
 
         elif changement == "anomalies":
             view.page_commandes.afficher_anomalies(modele.anomalies)
@@ -145,12 +146,24 @@ class MainController:
 
         elif changement == "transactions":
             view.page_statistiques.afficher_statistiques(modele.statistiques, modele.transactions)
+            self._rafraichir_clients_et_historique()
 
         elif changement == "reponse":
             self._afficher_reponse(topic, modele.derniere_reponse)
 
         elif changement == "invalide":
             view.add_log(f"Message invalide ignoré sur {topic}")
+
+    def _rafraichir_clients_et_historique(self):
+        """Client de chaque place et nouveaux événements de l'historique (onglet Stationnement)."""
+        modele = self.modele
+        occupants = {
+            place: (modele.nom_court(carte), modele.decrire_carte(carte))
+            for place, carte in modele.occupants().items()
+        }
+
+        self.view.page_stationnement.afficher_occupants(occupants)
+        self.view.page_stationnement.ajouter_historique(modele.prendre_nouveaux_evenements())
 
     def _afficher_reponse(self, topic: str, reponse: dict):
         """Affiche la réponse du RPi à une commande."""
@@ -160,5 +173,6 @@ class MainController:
         if topic == MqttTopics.REPONSE_COMPTES:
             self.view.page_comptes.afficher_reponse(texte)
             self.view.page_comptes.afficher_comptes(self.modele.comptes, self.modele.noms)
+            self._rafraichir_clients_et_historique()      # les noms ont pu arriver
         else:
             self.view.page_commandes.afficher_reponse(texte)

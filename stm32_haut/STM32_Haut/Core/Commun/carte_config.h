@@ -88,11 +88,18 @@
  * puissance ≈ 0,9 A). */
 #define T07_LUMINOSITE_GLOBALE    16U
 
-/* Calibration du blanc en % par canal (point 2 de la fiche T07) :
- * baisser un canal si le blanc paraît bleuté ou rosé. 100 = sans correction. */
+/* Calibration du blanc en % par canal (point 2 de la fiche T07).
+ * Le bleu des DEL RGB est très efficace : R = V = B donne un blanc bleuté.
+ * On baisse donc le bleu, et un peu le vert, pour un blanc plus chaud.
+ * Plus de jaune : baisser T07_CALIB_BLEU_PCT. Trop jaune : le remonter.
+ * 100 / 100 / 100 = aucune correction. */
 #define T07_CALIB_ROUGE_PCT       100U
-#define T07_CALIB_VERT_PCT        100U
-#define T07_CALIB_BLEU_PCT        100U
+#define T07_CALIB_VERT_PCT        90U
+#define T07_CALIB_BLEU_PCT        75U
+
+/* Correction gamma des couleurs des places : 1 = l'orange paraît orange
+ * au lieu de jaune; 0 = couleurs envoyées telles quelles. */
+#define T07_GAMMA_PLACES          1
 
 /* Démonstration sans RPi : 1 = les places défilent dans tous les états et
  * l'éclairage varie tout seul; les commandes CAN sont ignorées. */
