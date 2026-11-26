@@ -2,27 +2,50 @@
 
 Les trois projets `STM32_Bas`, `STM32_Haut` et `STM32_Borne` ont le même
 code et le même `.ioc`. La seule différence est la ligne
-`#define CARTE ...` dans `Core/Inc/carte_config.h`.
+`#define CARTE ...` dans `Core/Commun/carte_config.h`.
 
-## Qui fait quoi
+## Arborescence
 
-| Fichier | Partie | Responsable |
-|---|---|---|
-| `carte_config.h` | Identité de la carte et réglages de chaque tâche, une section par tâche | Chacun dans sa section |
-| `protocole_can.h` | Identifiants du protocole CAN v1.6 | Commun, ne pas modifier seul |
-| `can_esa.c/.h` | Gestionnaire CAN unique : filtres, réception, envoi, heartbeat | Commun |
-| `apa102.c/.h` | Pilote de la barre de 15 DEL APA102 | T07, Tom |
-| `t07_eclairage.c/.h` | DEL des places et éclairage blanc | T07, Tom |
-| `main.c` | Appels `..._Init()` et `..._Task()` dans les zones USER CODE | Chacun ajoute sa ligne |
+Même organisation que le projet LitDeClous : les pilotes de matériel dans
+`Drivers/BSP/<Nom>/`, le code de l'application dans `Core/`.
+
+```
+STM32_Xxx/
+├── Core/
+│   ├── Inc/ Src/ Startup/      Généré par CubeMX. Seul main.c est modifié,
+│   │                           dans les zones USER CODE.
+│   ├── Commun/                 PARTIE COMMUNE (toute l'équipe)
+│   │   ├── carte_config.h      Choix de la carte + une section par tâche
+│   │   ├── protocole_can.h     Identifiants du protocole CAN v1.6
+│   │   └── can_esa.c/.h        Gestionnaire CAN unique, heartbeat
+│   └── Taches/                 UN DOSSIER PAR TÂCHE
+│       └── T07_Eclairage/      T07, Tom : DEL des places et éclairage
+│           └── t07_eclairage.c/.h
+└── Drivers/
+    ├── BSP/                    PILOTES DE MATÉRIEL (un dossier par composant)
+    │   └── APA102/             T07, Tom : barre de 15 DEL APA102
+    │       └── apa102.c/.h
+    ├── CMSIS/                  ST, ne pas modifier
+    └── STM32F4xx_HAL_Driver/   ST, ne pas modifier
+```
+
+Un pilote (`Drivers/BSP`) parle à un composant et ne connaît rien du
+projet. Une tâche (`Core/Taches`) contient la logique du projet et
+utilise les pilotes.
 
 ## Ajouter une tâche
 
-1. Créer `tXX_nom.c` et `tXX_nom.h` dans `Core/Src` et `Core/Inc`.
-2. Ajouter sa section dans `carte_config.h`.
-3. Dans `can_esa.c`, ajouter ses ID dans `ids_acceptes[]` et sa fonction
+1. Créer `Core/Taches/TXX_Nom/` avec `tXX_nom.c` et `tXX_nom.h`.
+   Un nouveau composant va dans `Drivers/BSP/<Composant>/`.
+2. Ajouter le dossier aux chemins d'inclusion : clic droit sur le projet >
+   Properties > C/C++ Build > Settings > MCU GCC Compiler > Include paths,
+   pour **Debug et Release**.
+3. Ajouter sa section dans `carte_config.h`.
+4. Dans `can_esa.c`, ajouter ses ID dans `ids_acceptes[]` et sa fonction
    de réception dans `recepteurs[]` (les deux « POINT DE BRANCHEMENT »).
-4. Dans `main.c`, appeler `XX_Init()` avant `CanEsa_Init()` et `XX_Task()`
+5. Dans `main.c`, appeler `XX_Init()` avant `CanEsa_Init()` et `XX_Task()`
    dans la boucle.
+6. Recopier les changements dans les trois projets (Bas, Haut, Borne).
 
 Règles : un seul gestionnaire CAN par carte, rien de long sous
 interruption, pas de `HAL_Delay()` dans la boucle principale.
