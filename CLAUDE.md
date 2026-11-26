@@ -62,6 +62,15 @@ des équipes **fictives 98 et 99** et refuse de démarrer en mode réel si
   - `tests/` : outils autonomes (`mqtt_simple.py`, `rfid_simple.py`,
     `test_rfid_vers_pc.py`).
   - `stm32_bas/`, `stm32_haut/`, `stm32_borne/` : code des STM32 (équipe).
+    Projets `STM32_Bas`, `STM32_Haut`, `STM32_Borne` identiques : seule la
+    ligne `#define CARTE` de `Core/Inc/carte_config.h` change. Fichiers de
+    Tom (T07) : `t07_eclairage.c/.h`, `apa102.c/.h`. Partie commune :
+    `can_esa.c/.h` (gestionnaire CAN unique, heartbeat), `protocole_can.h`.
+    Voir le `README.md` de chaque projet. Un changement à T07 doit être
+    recopié dans les trois projets.
+- **T07 STM32** : DEL paires = places (Bas 1-7, Haut 8-14), DEL impaires =
+  éclairage blanc (Bas niveau 0, Haut niveau 1, Borne niveau 2). La Borne
+  pilote la plaque du toit : DEL paires en déco (`T07_DISCO`).
   - Les docs de la discussion parlent de `pc/` : c'est `pc_supervision/`.
 - **État au 25 nov. (midi)** : l'app PC finie est sur GitHub. Le code RPi
   à jour était seulement sur la RPi. Tom a fait `git pull origin Tom` sur la
@@ -100,6 +109,11 @@ des équipes **fictives 98 et 99** et refuse de démarrer en mode réel si
   prescaler 256. Trame : 32 bits à 0, puis par DEL `0xE0|luminosité(0-31)`,
   B, G, R, puis trame de fin. Piège vu : `0xE0` seul = luminosité 0 (éteinte),
   utiliser `0xFF` (= `0xE0|31`).
+- **Montage réel des DEL** (PCB-12 + PCB-11) : une barre de 15 DEL par
+  carte sur le **PMOD type 2 = SPI1** (PA5 SCK, PA7 MOSI), traducteur
+  TXU0102 du PCB-11 (push-pull suffit). **PE3** (CS de l'accéléromètre,
+  même SPI1) doit rester haute. **PE0** = OE du PCB-11 (pull-up 100 kΩ) :
+  ne jamais la mettre à 0. L'essai SPI2 ci-dessus était sur banc seulement.
 - **Radar C4001** (DFRobot) : I2C 0x2B. Registre 0x00 = statut (0x81 = init
   + en marche + mode présence), résultats 0x10-0x16, **repeated start
   obligatoire** (ioctl I2C_RDWR). Changement de mode par CTRL1 0x3B, départ
