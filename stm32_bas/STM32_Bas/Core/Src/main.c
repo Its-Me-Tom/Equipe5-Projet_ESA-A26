@@ -28,7 +28,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "carte_config.h"     /* identité de la carte : CARTE_BAS, CARTE_HAUT ou CARTE_BORNE */
+#include "can_esa.h"          /* PARTIE COMMUNE : gestionnaire CAN unique */
+#include "t07_eclairage.h"    /* T07 — DEL et éclairage (Tom) */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,6 +104,22 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
 
+  /* T07 — DEL et éclairage : tout éteint jusqu'à la première consigne */
+  LED_Init();
+
+  /* Autres tâches : leurs fonctions d'initialisation ici */
+
+  /* PARTIE COMMUNE — CAN : en dernier, quand les tâches sont prêtes à
+   * recevoir. Envoie tout de suite un heartbeat « initialisation ». */
+  if (CanEsa_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* Le prochain heartbeat annoncera « prêt » : le RPi renverra alors les
+   * consignes de T07 (DEL et éclairage). */
+  CanEsa_DefinirEtat(HEARTBEAT_PRET);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,6 +129,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    /* Chaque tâche est non bloquante : pas de HAL_Delay() dans la boucle */
+    CanEsa_Task();      /* PARTIE COMMUNE : réception, heartbeat, envois */
+    LED_Task();         /* T07 : clignotement, décoration, envoi aux DEL */
+
+    /* Autres tâches : leur fonction ..._Task() ici */
   }
   /* USER CODE END 3 */
 }
