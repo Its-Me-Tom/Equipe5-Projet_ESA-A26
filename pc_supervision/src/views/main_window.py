@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import QLabel, QMainWindow, QPlainTextEdit, QTabWidget, QVBoxLayout, QWidget
 
 from src import config
@@ -52,6 +54,23 @@ class MainWindow(QMainWindow):
         self.texte_journal.setReadOnly(True)
         self.texte_journal.setMaximumBlockCount(500)     # garde les 500 dernières lignes
         disposition.addWidget(self.texte_journal, stretch=1)
+
+        # Plein écran : F11 bascule, Échap revient en fenêtre (en plein écran,
+        # il n'y a plus de barre de titre pour réduire ou fermer)
+        QShortcut(QKeySequence(Qt.Key.Key_F11), self, self.basculer_plein_ecran)
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self.quitter_plein_ecran)
+
+    def basculer_plein_ecran(self):
+        """F11 : passe du plein écran à la fenêtre, et inversement."""
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
+    def quitter_plein_ecran(self):
+        """Échap : revient en fenêtre normale (sans effet hors du plein écran)."""
+        if self.isFullScreen():
+            self.showNormal()
 
     def afficher_connexion(self, connecte: bool):
         """Affiche l'état de la connexion du PC au broker MQTT."""

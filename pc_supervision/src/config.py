@@ -13,6 +13,14 @@ ID_CLIENT_MQTT = f"esa-pc-equipe-{NUMERO_EQUIPE}"
 DELAI_REPONSE_S = 3.0
 
 # ----------------------------------------------------------------------
+# Fenêtre
+# ----------------------------------------------------------------------
+# True = l'app s'ouvre en vrai plein écran : tout l'écran, sans barre de
+# titre ni barre des tâches. F11 bascule plein écran / fenêtre, Échap
+# revient en fenêtre. False = fenêtre normale.
+PLEIN_ECRAN = True
+
+# ----------------------------------------------------------------------
 # Affichage des places : mêmes couleurs que les DEL de la maquette (T07)
 # ----------------------------------------------------------------------
 COULEURS_PLACES = {
