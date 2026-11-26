@@ -63,9 +63,12 @@ des équipes **fictives 98 et 99** et refuse de démarrer en mode réel si
     `test_rfid_vers_pc.py`).
   - `stm32_bas/`, `stm32_haut/`, `stm32_borne/` : code des STM32 (équipe).
     Projets `STM32_Bas`, `STM32_Haut`, `STM32_Borne` identiques : seule la
-    ligne `#define CARTE` de `Core/Inc/carte_config.h` change. Fichiers de
-    Tom (T07) : `t07_eclairage.c/.h`, `apa102.c/.h`. Partie commune :
-    `can_esa.c/.h` (gestionnaire CAN unique, heartbeat), `protocole_can.h`.
+    ligne `#define CARTE` de `Core/Commun/carte_config.h` change.
+    Arborescence à la LitDeClous : `Core/Commun/` (carte_config.h,
+    protocole_can.h, can_esa.c/.h = gestionnaire CAN unique et heartbeat),
+    `Core/Taches/T07_Eclairage/` (T07 de Tom), `Drivers/BSP/APA102/`
+    (pilote). Chaque nouveau dossier va dans les include paths du
+    `.cproject`, Debug et Release.
     Voir le `README.md` de chaque projet. Un changement à T07 doit être
     recopié dans les trois projets.
 - **T07 STM32** : DEL paires = places (Bas 1-7, Haut 8-14), DEL impaires =
